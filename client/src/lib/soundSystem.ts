@@ -6,10 +6,11 @@
 
 class SoundSystem {
   private audioContext: AudioContext | null = null;
-  private masterVolume = 0.15; // Reduced volume
+  private masterVolume = 0.1; // Further reduced volume
   private enabled = true;
   private lastSoundTime: Record<string, number> = {};
-  private soundThrottle = 50; // Minimum ms between same sounds
+  private soundThrottle = 100; // Increased throttling to 100ms
+  private noiseBuffer: AudioBuffer | null = null;
 
   private getContext(): AudioContext {
     if (!this.audioContext) {
@@ -51,23 +52,28 @@ class SoundSystem {
     }
   }
 
+  private getNoiseBuffer(): AudioBuffer {
+    if (!this.noiseBuffer) {
+      const ctx = this.getContext();
+      const bufferSize = ctx.sampleRate * 0.1; // Pre-generate 0.1s of noise
+      this.noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const output = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+    }
+    return this.noiseBuffer;
+  }
+
   private playNoise(duration: number, volume: number = 0.1) {
     if (!this.enabled) return;
     
     try {
       const ctx = this.getContext();
-      const bufferSize = ctx.sampleRate * duration;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-
       const noise = ctx.createBufferSource();
       const gainNode = ctx.createGain();
 
-      noise.buffer = buffer;
+      noise.buffer = this.getNoiseBuffer(); // Use pre-generated buffer
       noise.connect(gainNode);
       gainNode.connect(ctx.destination);
 
@@ -75,6 +81,7 @@ class SoundSystem {
       gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
 
       noise.start(ctx.currentTime);
+      noise.stop(ctx.currentTime + duration);
     } catch (e) {
       console.warn('Noise playback failed:', e);
     }
@@ -114,32 +121,27 @@ class SoundSystem {
   }
 
   goldCollect() {
+    if (!this.canPlaySound('gold')) return;
     this.playTone(1000, 0.08, 'sine', 0.1);
-    setTimeout(() => this.playTone(1200, 0.08, 'sine', 0.08), 40);
   }
 
   techUpgrade() {
-    this.playTone(800, 0.15, 'sine', 0.2);
-    setTimeout(() => this.playTone(1000, 0.15, 'sine', 0.18), 80);
-    setTimeout(() => this.playTone(1200, 0.2, 'sine', 0.15), 160);
+    if (!this.canPlaySound('upgrade')) return;
+    this.playTone(800, 0.2, 'sine', 0.2);
   }
 
   heroRespawn() {
-    this.playTone(600, 0.2, 'sine', 0.25);
-    setTimeout(() => this.playTone(900, 0.2, 'sine', 0.2), 100);
-    setTimeout(() => this.playTone(1200, 0.25, 'sine', 0.18), 200);
+    if (!this.canPlaySound('respawn')) return;
+    this.playTone(600, 0.3, 'sine', 0.25);
   }
 
   // Game events
   victory() {
-    this.playTone(800, 0.3, 'sine', 0.3);
-    setTimeout(() => this.playTone(1000, 0.3, 'sine', 0.28), 150);
-    setTimeout(() => this.playTone(1200, 0.4, 'sine', 0.25), 300);
+    this.playTone(1000, 0.5, 'sine', 0.3);
   }
 
   defeat() {
-    this.playTone(400, 0.4, 'sawtooth', 0.25);
-    setTimeout(() => this.playTone(300, 0.5, 'sawtooth', 0.2), 200);
+    this.playTone(300, 0.6, 'sawtooth', 0.25);
   }
 
   buildingDamage() {
