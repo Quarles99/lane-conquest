@@ -20,6 +20,15 @@ import {
   UnitType,
 } from './gameTypes';
 import { updateAI } from './aiOpponent';
+import { AttackAnimationManager } from './attackAnimations';
+import { soundSystem } from './soundSystem';
+
+// Global animation manager
+const animationManager = new AttackAnimationManager();
+
+export function getAnimationManager() {
+  return animationManager;
+}
 
 export function createInitialGameState(): GameState {
   return {
@@ -157,11 +166,17 @@ function updateHeroSpawning(state: GameState, deltaTime: number): GameState {
   // Spawn player hero if not present and not on cooldown
   if (!state.playerHeroUnit && state.playerHeroRespawnTime <= 0) {
     state.playerHeroUnit = createHeroUnit(state.playerHero, 'top');
+    if (state.matchTime > 1) { // Don't play sound on initial spawn
+      soundSystem.heroRespawn();
+    }
   }
   
   // Spawn AI hero if not present and not on cooldown
   if (!state.aiHeroUnit && state.aiHeroRespawnTime <= 0) {
     state.aiHeroUnit = createHeroUnit(state.aiHero, 'top');
+    if (state.matchTime > 1) { // Don't play sound on initial spawn
+      soundSystem.heroRespawn();
+    }
   }
   
   // Check if player hero died
@@ -228,10 +243,15 @@ export function spawnUnit(
     state.aiUnits.push(unit);
   }
   
+  // Play spawn sound
+  soundSystem.unitSpawn();
+  
   return state;
 }
 
 export function updateGameState(state: GameState, deltaTime: number): GameState {
+  // Update animations
+  animationManager.update(deltaTime);
   if (!state.isPlaying || state.isPaused || state.winner) return state;
   
   // Update match time
@@ -403,13 +423,48 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
     const attackCooldown = 1 / unit.attackSpeed;
     
     if (timeSinceLastAttack >= attackCooldown) {
+      // Create attack animation
+      const isRanged = unit.range > 2;
+      const projectileType = isRanged ? (unit.type === 'archer' || unit.type === 'skeleton' ? 'arrow' : 'magic') : 'melee';
+      
+      // Play attack sound
+      if (projectileType === 'arrow') {
+        soundSystem.arrowShot();
+      } else if (projectileType === 'magic') {
+        soundSystem.magicCast();
+      } else {
+        soundSystem.swordHit();
+      }
+      
+      // Calculate positions (lane-based Y coordinate)
+      const laneY = unit.lane === 'top' ? 25 : 75;
+      const targetLaneY = target.lane === 'top' ? 25 : 75;
+      
+      animationManager.createProjectile(
+        unit.position,
+        laneY,
+        target.position,
+        targetLaneY,
+        projectileType,
+        unit.faction
+      );
+      
       // Deal damage
       target.health -= unit.attack;
       unit.lastAttackTime = state.matchTime;
       
+      // Create hit effect
+      animationManager.createEffect(target.position, targetLaneY, 'hit', target.faction);
+      
       if (target.health <= 0) {
         target.isDead = true;
         unit.target = null;
+        
+        // Create death effect
+        animationManager.createEffect(target.position, targetLaneY, 'death', target.faction);
+        
+        // Play death sound
+        soundSystem.unitDeath();
         
         // Award XP to hero
         if (unit.faction === 'human') {
@@ -459,11 +514,30 @@ function resolveTowerAttacks(state: GameState, deltaTime: number): GameState {
     const attackCooldown = 1 / tower.attackSpeed;
     
     if (timeSinceLastAttack >= attackCooldown) {
+      // Create tower attack animation
+      const laneY = tower.lane === 'top' ? 25 : 75;
+      const targetLaneY = closest.lane === 'top' ? 25 : 75;
+      
+      animationManager.createProjectile(
+        tower.position,
+        laneY,
+        closest.position,
+        targetLaneY,
+        'arrow',
+        tower.faction
+      );
+      
+      soundSystem.towerAttack();
+      
       closest.health -= tower.attack;
       tower.lastAttackTime = state.matchTime;
       
+      animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);
+      
       if (closest.health <= 0) {
         closest.isDead = true;
+        animationManager.createEffect(closest.position, targetLaneY, 'death', closest.faction);
+        soundSystem.unitDeath();
       }
     }
   }
@@ -500,11 +574,29 @@ function resolveBuildingAttacks(state: GameState, deltaTime: number): GameState 
       const attackCooldown = 1 / state.playerBuilding.attackSpeed;
       
       if (timeSinceLastAttack >= attackCooldown) {
+        // Building attack animation
+        const targetLaneY = closest.lane === 'top' ? 25 : 75;
+        
+        animationManager.createProjectile(
+          5,
+          50,
+          closest.position,
+          targetLaneY,
+          'magic',
+          'human'
+        );
+        
+        soundSystem.towerAttack();
+        
         closest.health -= state.playerBuilding.attack;
         state.playerBuilding.lastAttackTime = state.matchTime;
         
+        animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);
+        
         if (closest.health <= 0) {
           closest.isDead = true;
+          animationManager.createEffect(closest.position, targetLaneY, 'death', closest.faction);
+          soundSystem.unitDeath();
         }
       }
     }
@@ -527,11 +619,29 @@ function resolveBuildingAttacks(state: GameState, deltaTime: number): GameState 
       const attackCooldown = 1 / state.aiBuilding.attackSpeed;
       
       if (timeSinceLastAttack >= attackCooldown) {
+        // AI Building attack animation
+        const targetLaneY = closest.lane === 'top' ? 25 : 75;
+        
+        animationManager.createProjectile(
+          95,
+          50,
+          closest.position,
+          targetLaneY,
+          'magic',
+          'undead'
+        );
+        
+        soundSystem.towerAttack();
+        
         closest.health -= state.aiBuilding.attack;
         state.aiBuilding.lastAttackTime = state.matchTime;
         
+        animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);
+        
         if (closest.health <= 0) {
           closest.isDead = true;
+          animationManager.createEffect(closest.position, targetLaneY, 'death', closest.faction);
+          soundSystem.unitDeath();
         }
       }
     }
@@ -557,6 +667,7 @@ function checkHeroLevelUp(state: GameState, faction: Faction): GameState {
 }
 
 export function upgradeTechTier(state: GameState, faction: Faction): GameState {
+  soundSystem.techUpgrade();
   const currentTier = faction === 'human' ? state.playerTechTier : state.aiTechTier;
   const gold = faction === 'human' ? state.playerGold : state.aiGold;
   

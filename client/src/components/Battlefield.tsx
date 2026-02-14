@@ -6,12 +6,17 @@
 
 import { GameState, Lane, Tower, Unit } from '@/lib/gameTypes';
 import type { HeroUnit } from '@/lib/gameTypes';
+import { getAnimationManager } from '@/lib/gameEngine';
+import AttackEffects from './AttackEffects';
 
 interface BattlefieldProps {
   gameState: GameState;
 }
 
 export default function Battlefield({ gameState }: BattlefieldProps) {
+  const animationManager = getAnimationManager();
+  const projectiles = animationManager.getProjectiles();
+  const effects = animationManager.getEffects();
   const renderLane = (lane: Lane) => {
     const playerUnits = gameState.playerUnits.filter(u => u.lane === lane && !u.isDead);
     const aiUnits = gameState.aiUnits.filter(u => u.lane === lane && !u.isDead);
@@ -64,9 +69,12 @@ export default function Battlefield({ gameState }: BattlefieldProps) {
   };
   
   return (
-    <div className="flex-1 flex flex-col gap-6 justify-center">
+    <div className="flex-1 flex flex-col gap-6 justify-center relative">
       {renderLane('top')}
       {renderLane('bottom')}
+      
+      {/* Attack effects overlay */}
+      <AttackEffects projectiles={projectiles} effects={effects} />
     </div>
   );
 }
