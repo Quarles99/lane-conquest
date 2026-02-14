@@ -5,8 +5,12 @@
 
 export type Faction = 'human' | 'undead';
 export type Lane = 'top' | 'bottom';
-export type UnitType = 'footman' | 'archer' | 'knight' | 'priest' | 'zombie' | 'skeleton' | 'ghoul' | 'necromancer';
+export type UnitType = 'footman' | 'archer' | 'knight' | 'priest' | 'ballista' | 'zombie' | 'skeleton' | 'ghoul' | 'necromancer' | 'catapult';
 export type HeroType = 'paladin' | 'deathknight';
+
+// Warcraft 3 style damage and armor types
+export type DamageType = 'normal' | 'pierce' | 'magic' | 'siege' | 'hero';
+export type ArmorType = 'heavy' | 'medium' | 'light' | 'unarmored' | 'fortified';
 
 export interface Unit {
   id: string;
@@ -20,6 +24,8 @@ export interface Unit {
   attackSpeed: number; // attacks per second
   moveSpeed: number; // units per second
   range: number; // attack range
+  damageType: DamageType;
+  armorType: ArmorType;
   lastAttackTime: number;
   target: string | null; // target unit ID
   isDead: boolean;
@@ -63,6 +69,8 @@ export interface Building {
   attack: number;
   attackSpeed: number;
   range: number;
+  damageType: DamageType;
+  armorType: ArmorType;
   lastAttackTime: number;
   isDead: boolean;
 }
@@ -77,6 +85,8 @@ export interface Tower {
   attack: number;
   attackSpeed: number;
   range: number;
+  damageType: DamageType;
+  armorType: ArmorType;
   lastAttackTime: number;
   isDead: boolean;
 }
@@ -144,6 +154,8 @@ export interface UnitStats {
   attackSpeed: number;
   moveSpeed: number;
   range: number;
+  damageType: DamageType;
+  armorType: ArmorType;
   cost: number;
   tierRequired: number;
 }
@@ -156,6 +168,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 1.0,
     moveSpeed: 3,
     range: 1,
+    damageType: 'normal',
+    armorType: 'heavy',
     cost: 50,
     tierRequired: 1,
   },
@@ -165,6 +179,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 1.2,
     moveSpeed: 3.5,
     range: 6,
+    damageType: 'pierce',
+    armorType: 'light',
     cost: 75,
     tierRequired: 1,
   },
@@ -174,6 +190,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 0.85,
     moveSpeed: 4,
     range: 1,
+    damageType: 'normal',
+    armorType: 'heavy',
     cost: 120,
     tierRequired: 2,
   },
@@ -183,6 +201,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 1.5,
     moveSpeed: 3,
     range: 5,
+    damageType: 'magic',
+    armorType: 'unarmored',
     cost: 100,
     tierRequired: 2,
   },
@@ -194,6 +214,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 0.9,
     moveSpeed: 2.5,
     range: 1,
+    damageType: 'normal',
+    armorType: 'medium',
     cost: 50,
     tierRequired: 1,
   },
@@ -203,6 +225,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 1.25,
     moveSpeed: 3.5,
     range: 6,
+    damageType: 'pierce',
+    armorType: 'light',
     cost: 75,
     tierRequired: 1,
   },
@@ -212,6 +236,8 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 0.95,
     moveSpeed: 4.5,
     range: 1,
+    damageType: 'normal',
+    armorType: 'medium',
     cost: 120,
     tierRequired: 2,
   },
@@ -221,8 +247,34 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     attackSpeed: 1.2,
     moveSpeed: 3,
     range: 5,
+    damageType: 'magic',
+    armorType: 'unarmored',
     cost: 100,
     tierRequired: 2,
+  },
+  
+  // Tier 3 Siege Units
+  ballista: {
+    health: 140,
+    attack: 35,
+    attackSpeed: 0.6,
+    moveSpeed: 2,
+    range: 8,
+    damageType: 'siege',
+    armorType: 'medium',
+    cost: 180,
+    tierRequired: 3,
+  },
+  catapult: {
+    health: 150,
+    attack: 38,
+    attackSpeed: 0.55,
+    moveSpeed: 2,
+    range: 8,
+    damageType: 'siege',
+    armorType: 'medium',
+    cost: 180,
+    tierRequired: 3,
   },
 };
 
@@ -233,6 +285,8 @@ export const HERO_STATS = {
     attackSpeed: 1.0,
     healthPerLevel: 50,
     attackPerLevel: 3,
+    damageType: 'hero' as DamageType,
+    armorType: 'heavy' as ArmorType,
   },
   deathknight: {
     baseHealth: 450,
@@ -240,6 +294,8 @@ export const HERO_STATS = {
     attackSpeed: 1.1,
     healthPerLevel: 45,
     attackPerLevel: 4,
+    damageType: 'hero' as DamageType,
+    armorType: 'heavy' as ArmorType,
   },
 };
 

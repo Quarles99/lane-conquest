@@ -385,13 +385,13 @@ export default function Game() {
 
               {/* Unit recruitment - North Lane */}
               <div>
-                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - North Lane (Q/W/E/R)</h3>
+                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - North Lane (Q/W/E/R/T)</h3>
                 <div className="space-y-2">
-                  {(['footman', 'archer', 'knight', 'priest'] as const).map((unitType, idx) => {
+                  {(['footman', 'archer', 'knight', 'priest', 'ballista'] as const).map((unitType, idx) => {
                     const stats = UNIT_STATS[unitType];
                     const canAfford = gameState.playerGold >= stats.cost;
                     const tierUnlocked = gameState.playerTechTier >= stats.tierRequired;
-                    const hotkey = ['Q', 'W', 'E', 'R'][idx];
+                    const hotkey = ['Q', 'W', 'E', 'R', 'T'][idx];
                     
                     return (
                       <UnitTooltip key={unitType} unitType={unitType}>
@@ -415,13 +415,13 @@ export default function Game() {
 
               {/* Unit recruitment - South Lane */}
               <div>
-                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - South Lane (A/S/D/F)</h3>
+                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - South Lane (A/S/D/F/G)</h3>
                 <div className="space-y-2">
-                  {(['footman', 'archer', 'knight', 'priest'] as const).map((unitType, idx) => {
+                  {(['footman', 'archer', 'knight', 'priest', 'ballista'] as const).map((unitType, idx) => {
                     const stats = UNIT_STATS[unitType];
                     const canAfford = gameState.playerGold >= stats.cost;
                     const tierUnlocked = gameState.playerTechTier >= stats.tierRequired;
-                    const hotkey = ['A', 'S', 'D', 'F'][idx];
+                    const hotkey = ['A', 'S', 'D', 'F', 'G'][idx];
                     
                     return (
                       <UnitTooltip key={unitType} unitType={unitType}>

@@ -39,6 +39,12 @@ export default function UnitTooltip({ unitType, children }: UnitTooltipProps) {
             <div className="text-muted-foreground">Range:</div>
             <div className="text-foreground">{stats.range === 1 ? 'Melee' : stats.range}</div>
             
+            <div className="text-muted-foreground">Damage Type:</div>
+            <div className="text-foreground capitalize">{stats.damageType}</div>
+            
+            <div className="text-muted-foreground">Armor Type:</div>
+            <div className="text-foreground capitalize">{stats.armorType}</div>
+            
             <div className="text-muted-foreground">Tier Required:</div>
             <div className="text-foreground">{stats.tierRequired}</div>
           </div>

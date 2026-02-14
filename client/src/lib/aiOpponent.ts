@@ -111,6 +111,9 @@ function chooseUnitType(gameState: GameState, availableGold: number): UnitType |
   if (aiTechTier >= 2) {
     availableUnits.push('ghoul', 'necromancer');
   }
+  if (aiTechTier >= 3) {
+    availableUnits.push('catapult');
+  }
 
   // Filter by affordability
   const affordableUnits = availableUnits.filter(
@@ -130,6 +133,7 @@ function chooseUnitType(gameState: GameState, availableGold: number): UnitType |
       skeleton: 3,
       ghoul: 2,
       necromancer: 1,
+      catapult: 1,
     };
 
     const weightedUnits = affordableUnits.flatMap(unit =>
@@ -139,6 +143,7 @@ function chooseUnitType(gameState: GameState, availableGold: number): UnitType |
     return weightedUnits[Math.floor(Math.random() * weightedUnits.length)] as UnitType;
   } else {
     // Late game: prefer high-tier units
+    if (affordableUnits.includes('catapult')) return 'catapult';
     if (affordableUnits.includes('ghoul')) return 'ghoul';
     if (affordableUnits.includes('necromancer')) return 'necromancer';
     return affordableUnits[affordableUnits.length - 1];

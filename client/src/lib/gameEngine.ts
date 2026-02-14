@@ -6,16 +6,20 @@
 
 import { nanoid } from 'nanoid';
 import {
+  ArmorType,
+  Building,
+  DamageType,
   Faction,
   FormationSlot,
-  GAME_CONSTANTS,
   GameState,
-  HERO_STATS,
+  GAME_CONSTANTS,
   Hero,
   HeroAbility,
   HeroType,
   HeroUnit,
+  HERO_STATS,
   Lane,
+  Tower,
   Unit,
   UNIT_STATS,
   UnitType,
@@ -23,6 +27,7 @@ import {
 import { updateAI } from './aiOpponent';
 import { AttackAnimationManager } from './attackAnimations';
 import { soundSystem } from './soundSystem';
+import { calculateDamage } from './damageSystem';
 
 // Global animation manager
 const animationManager = new AttackAnimationManager();
@@ -66,6 +71,8 @@ export function createInitialGameState(): GameState {
       attack: GAME_CONSTANTS.BUILDING_ATTACK,
       attackSpeed: GAME_CONSTANTS.BUILDING_ATTACK_SPEED,
       range: GAME_CONSTANTS.BUILDING_RANGE,
+      damageType: 'siege',
+      armorType: 'fortified',
       lastAttackTime: 0,
       isDead: false,
     },
@@ -93,6 +100,8 @@ export function createInitialGameState(): GameState {
       attack: GAME_CONSTANTS.BUILDING_ATTACK,
       attackSpeed: GAME_CONSTANTS.BUILDING_ATTACK_SPEED,
       range: GAME_CONSTANTS.BUILDING_RANGE,
+      damageType: 'siege',
+      armorType: 'fortified',
       lastAttackTime: 0,
       isDead: false,
     },
@@ -120,6 +129,8 @@ function createTower(faction: Faction, lane: Lane, position: number) {
     attack: GAME_CONSTANTS.TOWER_ATTACK,
     attackSpeed: GAME_CONSTANTS.TOWER_ATTACK_SPEED,
     range: GAME_CONSTANTS.TOWER_RANGE,
+    damageType: 'pierce' as DamageType,
+    armorType: 'fortified' as ArmorType,
     lastAttackTime: 0,
     isDead: false,
   };
@@ -176,6 +187,8 @@ function createHeroUnit(hero: Hero, lane: Lane): HeroUnit {
     attackSpeed: hero.attackSpeed,
     moveSpeed: 4,
     range: 2,
+    damageType: stats.damageType,
+    armorType: stats.armorType,
     lastAttackTime: 0,
     target: null,
     isDead: false,
@@ -280,6 +293,8 @@ function spawnUnitFromFormation(
     attackSpeed: stats.attackSpeed,
     moveSpeed: stats.moveSpeed,
     range: stats.range,
+    damageType: stats.damageType,
+    armorType: stats.armorType,
     lastAttackTime: 0,
     target: null,
     isDead: false,
@@ -599,8 +614,8 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
         unit.faction
       );
       
-      // Deal damage
-      const damageDealt = unit.attack;
+      // Deal damage with armor type multiplier
+      const damageDealt = calculateDamage(unit.attack, unit.damageType, target.armorType);
       target.health -= damageDealt;
       unit.lastAttackTime = state.matchTime;
       
@@ -694,7 +709,8 @@ function resolveTowerAttacks(state: GameState, deltaTime: number): GameState {
       
       soundSystem.towerAttack();
       
-      closest.health -= tower.attack;
+      const damageDealt = calculateDamage(tower.attack, tower.damageType, closest.armorType);
+      closest.health -= damageDealt;
       tower.lastAttackTime = state.matchTime;
       
       animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);
@@ -767,7 +783,8 @@ function resolveBuildingAttacks(state: GameState, deltaTime: number): GameState 
         
         soundSystem.towerAttack();
         
-        closest.health -= state.playerBuilding.attack;
+        const damageDealt = calculateDamage(state.playerBuilding.attack, state.playerBuilding.damageType, closest.armorType);
+        closest.health -= damageDealt;
         state.playerBuilding.lastAttackTime = state.matchTime;
         
         animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);
@@ -812,7 +829,8 @@ function resolveBuildingAttacks(state: GameState, deltaTime: number): GameState 
         
         soundSystem.towerAttack();
         
-        closest.health -= state.aiBuilding.attack;
+        const damageDealt = calculateDamage(state.aiBuilding.attack, state.aiBuilding.damageType, closest.armorType);
+        closest.health -= damageDealt;
         state.aiBuilding.lastAttackTime = state.matchTime;
         
         animationManager.createEffect(closest.position, targetLaneY, 'hit', closest.faction);

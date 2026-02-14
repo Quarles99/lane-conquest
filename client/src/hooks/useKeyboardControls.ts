@@ -1,7 +1,7 @@
 /*
   KEYBOARD CONTROLS
-  - Q/W/E/R for North Lane units
-  - A/S/D/F for South Lane units
+  - Q/W/E/R/T for North Lane units
+  - A/S/D/F/G for South Lane units
 */
 
 import { Lane, UnitType } from '@/lib/gameTypes';
@@ -17,6 +17,7 @@ const NORTH_LANE_KEYS: Record<string, UnitType> = {
   w: 'archer',
   e: 'knight',
   r: 'priest',
+  t: 'ballista',
 };
 
 const SOUTH_LANE_KEYS: Record<string, UnitType> = {
@@ -24,6 +25,7 @@ const SOUTH_LANE_KEYS: Record<string, UnitType> = {
   s: 'archer',
   d: 'knight',
   f: 'priest',
+  g: 'ballista',
 };
 
 export function useKeyboardControls({ onSpawnUnit, enabled }: KeyboardControlsConfig) {
