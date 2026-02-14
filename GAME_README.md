@@ -21,9 +21,11 @@ Destroy the enemy fortress while defending your own. Deploy units strategically 
 - **North Lane**: Q (Footman), W (Archer), E (Knight), R (Priest)
 - **South Lane**: A (Footman), S (Archer), D (Knight), F (Priest)
 
-**Mouse**: Click unit buttons to spawn units in specific lanes
+**Mouse**: Click unit buttons to hire units for your formation (they will spawn automatically every 8 seconds)
 
 ### Core Mechanics
+
+**Formation-Based Deployment**: Hire units once to add them to your formation. Each hired unit automatically spawns every 8 seconds, creating a continuous production line. Build your formation strategically to create the perfect army composition.
 
 **Automatic Combat**: Units march forward automatically and engage enemies when in range. Focus on macro strategy rather than micromanagement.
 
@@ -75,16 +77,18 @@ The AI opponent controls the Undead Legion with equivalent units:
 ## Strategy Tips
 
 **Early Game** (0-5 minutes):
-- Focus on basic units (Footman/Archer)
-- Establish map presence in both lanes
+- Hire basic units (Footman/Archer) to build your formation
+- Establish continuous unit production in both lanes
 - Save gold for tech tier 2 upgrade
 - Keep your hero alive to gain early levels
+- Remember: each hire creates permanent auto-spawning
 
 **Mid Game** (5-15 minutes):
 - Upgrade to tier 2 when you have 200+ gold
-- Mix unit types for balanced army composition
+- Add tier 2 units to your formation for variety
 - Contest middle control for economic advantage
 - Use hero abilities to turn fights
+- Adjust formation composition based on enemy strategy
 
 **Late Game** (15+ minutes):
 - Deploy tier 2 units for maximum impact

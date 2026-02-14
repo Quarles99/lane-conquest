@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { createInitialGameState, spawnUnit, updateGameState, upgradeTechTier } from "@/lib/gameEngine";
+import { createInitialGameState, addToFormation, updateGameState, upgradeTechTier } from "@/lib/gameEngine";
 import { GAME_CONSTANTS, GameState, Lane, UNIT_STATS, UnitType } from "@/lib/gameTypes";
 import { useKeyboardControls } from "@/hooks/useKeyboardControls";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -51,7 +51,7 @@ export default function Game() {
   };
 
   const handleSpawnUnit = useCallback((unitType: UnitType, lane: Lane) => {
-    setGameState(prev => spawnUnit({ ...prev }, unitType, 'human', lane));
+    setGameState(prev => addToFormation({ ...prev }, unitType, 'human', lane));
   }, []);
 
   useKeyboardControls({
@@ -187,7 +187,7 @@ export default function Game() {
               <Card className="bg-secondary/50 border-2 border-primary/20 p-6">
                 <h2 className="text-xl font-display text-foreground mb-3">Battle Instructions</h2>
                 <div className="space-y-2 text-sm text-muted-foreground font-body leading-relaxed">
-                  <p>Deploy units to two lanes using keyboard hotkeys. Units march forward automatically and engage enemies in combat.</p>
+                  <p>Hire units once to add them to your formation. Each hired unit will automatically spawn every 8 seconds, creating a continuous army production line.</p>
                   <p>Destroy the enemy fortress to claim victory. Upgrade your hero through combat experience and advance through three technology tiers.</p>
                   <p>Control the middle section of the battlefield to gain bonus gold income and strategic advantage.</p>
                 </div>
@@ -253,9 +253,28 @@ export default function Game() {
                 )}
               </Card>
 
+              {/* Formation Queue Display */}
+              {gameState.playerFormation.length > 0 && (
+                <Card className="bg-secondary/50 border-2 border-primary/20 p-4">
+                  <h3 className="text-sm font-ui text-muted-foreground uppercase tracking-wider mb-3">Active Formation</h3>
+                  <div className="space-y-2">
+                    {gameState.playerFormation.map((slot, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-sm bg-card/30 p-2 rounded border border-primary/20">
+                        <span className="font-ui capitalize">
+                          {slot.unitType} ({slot.lane === 'top' ? 'North' : 'South'})
+                        </span>
+                        <span className="text-xs text-accent-foreground font-ui">
+                          Next: {Math.ceil(slot.spawnTimer)}s
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+
               {/* Unit recruitment - North Lane */}
               <div>
-                <h3 className="text-lg font-display text-foreground mb-3">North Lane (Q/W/E/R)</h3>
+                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - North Lane (Q/W/E/R)</h3>
                 <div className="space-y-2">
                   {(['footman', 'archer', 'knight', 'priest'] as const).map((unitType, idx) => {
                     const stats = UNIT_STATS[unitType];
@@ -285,7 +304,7 @@ export default function Game() {
 
               {/* Unit recruitment - South Lane */}
               <div>
-                <h3 className="text-lg font-display text-foreground mb-3">South Lane (A/S/D/F)</h3>
+                <h3 className="text-lg font-display text-foreground mb-3">Hire Units - South Lane (A/S/D/F)</h3>
                 <div className="space-y-2">
                   {(['footman', 'archer', 'knight', 'priest'] as const).map((unitType, idx) => {
                     const stats = UNIT_STATS[unitType];

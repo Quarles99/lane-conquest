@@ -7,6 +7,7 @@
 import { nanoid } from 'nanoid';
 import {
   Faction,
+  FormationSlot,
   GAME_CONSTANTS,
   GameState,
   HERO_STATS,
@@ -57,6 +58,7 @@ export function createInitialGameState(): GameState {
       createTower('human', 'top', 20),
       createTower('human', 'bottom', 20),
     ],
+    playerFormation: [],
     
     aiGold: 100,
     aiTechTier: 1,
@@ -78,6 +80,7 @@ export function createInitialGameState(): GameState {
       createTower('undead', 'top', 80),
       createTower('undead', 'bottom', 80),
     ],
+    aiFormation: [],
     
     middleControlFaction: null,
     middleControlProgress: 0,
@@ -202,7 +205,8 @@ function updateHeroSpawning(state: GameState, deltaTime: number): GameState {
   return state;
 }
 
-export function spawnUnit(
+// Add unit to formation (hire once, spawns automatically)
+export function addToFormation(
   state: GameState,
   unitType: UnitType,
   faction: Faction,
@@ -219,6 +223,33 @@ export function spawnUnit(
     if (state.aiGold < cost) return state;
     state.aiGold -= cost;
   }
+  
+  const formationSlot: FormationSlot = {
+    unitType,
+    lane,
+    spawnTimer: GAME_CONSTANTS.UNIT_SPAWN_INTERVAL, // First spawn after interval
+    isActive: true,
+  };
+  
+  if (faction === 'human') {
+    state.playerFormation.push(formationSlot);
+  } else {
+    state.aiFormation.push(formationSlot);
+  }
+  
+  soundSystem.unitSpawn();
+  
+  return state;
+}
+
+// Internal function to spawn a unit from formation
+function spawnUnitFromFormation(
+  state: GameState,
+  unitType: UnitType,
+  faction: Faction,
+  lane: Lane
+): void {
+  const stats = UNIT_STATS[unitType];
   
   const unit: Unit = {
     id: nanoid(),
@@ -243,8 +274,32 @@ export function spawnUnit(
     state.aiUnits.push(unit);
   }
   
-  // Play spawn sound
   soundSystem.unitSpawn();
+}
+
+// Update formation timers and spawn units
+function updateFormationSpawning(state: GameState, deltaTime: number): GameState {
+  // Update player formation
+  for (const slot of state.playerFormation) {
+    if (!slot.isActive) continue;
+    
+    slot.spawnTimer -= deltaTime;
+    if (slot.spawnTimer <= 0) {
+      spawnUnitFromFormation(state, slot.unitType, 'human', slot.lane);
+      slot.spawnTimer = GAME_CONSTANTS.UNIT_SPAWN_INTERVAL;
+    }
+  }
+  
+  // Update AI formation
+  for (const slot of state.aiFormation) {
+    if (!slot.isActive) continue;
+    
+    slot.spawnTimer -= deltaTime;
+    if (slot.spawnTimer <= 0) {
+      spawnUnitFromFormation(state, slot.unitType, 'undead', slot.lane);
+      slot.spawnTimer = GAME_CONSTANTS.UNIT_SPAWN_INTERVAL;
+    }
+  }
   
   return state;
 }
@@ -256,6 +311,9 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
   
   // Update match time
   state.matchTime += deltaTime;
+  
+  // Update formation spawning
+  state = updateFormationSpawning(state, deltaTime);
   
   // Generate gold
   const goldGain = GAME_CONSTANTS.GOLD_PER_SECOND * deltaTime;

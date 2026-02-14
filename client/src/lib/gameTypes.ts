@@ -81,6 +81,13 @@ export interface Tower {
   isDead: boolean;
 }
 
+export interface FormationSlot {
+  unitType: UnitType;
+  lane: Lane;
+  spawnTimer: number; // Time until next spawn
+  isActive: boolean; // Whether this slot is producing units
+}
+
 export interface GameState {
   isPlaying: boolean;
   isPaused: boolean;
@@ -96,6 +103,7 @@ export interface GameState {
   playerUnits: Unit[];
   playerBuilding: Building;
   playerTowers: Tower[];
+  playerFormation: FormationSlot[]; // Unit production queue
   
   // AI resources
   aiGold: number;
@@ -106,6 +114,7 @@ export interface GameState {
   aiUnits: Unit[];
   aiBuilding: Building;
   aiTowers: Tower[];
+  aiFormation: FormationSlot[]; // AI unit production queue
   
   // Middle control
   middleControlFaction: Faction | null;
@@ -236,4 +245,5 @@ export const GAME_CONSTANTS = {
   TOWER_RANGE: 20,
   MIDDLE_CONTROL_SPEED: 5, // points per second
   LANE_LENGTH: 100,
+  UNIT_SPAWN_INTERVAL: 8, // seconds between auto-spawns from formation
 };

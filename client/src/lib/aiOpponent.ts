@@ -5,7 +5,7 @@
 */
 
 import { GameState, Lane, UNIT_STATS, UnitType } from './gameTypes';
-import { spawnUnit, upgradeTechTier } from './gameEngine';
+import { addToFormation, upgradeTechTier } from './gameEngine';
 
 const AI_DECISION_INTERVAL = 2; // Make decisions every 2 seconds
 const AI_GOLD_RESERVE = 50; // Keep this much gold in reserve
@@ -95,8 +95,8 @@ function spawnUnits(gameState: GameState): GameState {
   const unitType = chooseUnitType(gameState, availableGold);
   if (!unitType) return gameState;
 
-  // Spawn the unit
-  return spawnUnit(gameState, unitType, 'undead', targetLane);
+  // Add unit to formation
+  return addToFormation(gameState, unitType, 'undead', targetLane);
 }
 
 function chooseUnitType(gameState: GameState, availableGold: number): UnitType | null {
