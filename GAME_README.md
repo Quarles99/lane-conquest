@@ -13,7 +13,7 @@ A gritty low-fantasy strategy tug-of-war game inspired by Warcraft 3 Direct Stri
 
 ### Objective
 
-Destroy the enemy fortress while defending your own. Deploy units strategically across two lanes, manage your economy, and upgrade your technology to overwhelm your opponent.
+Destroy the enemy fortress while defending your own. Deploy units strategically across two lanes, manage your economy, upgrade your technology, and command your hero to overwhelm your opponent.
 
 ### Controls
 
@@ -28,6 +28,16 @@ Destroy the enemy fortress while defending your own. Deploy units strategically 
 **Automatic Combat**: Units march forward automatically and engage enemies when in range. Focus on macro strategy rather than micromanagement.
 
 **Two-Lane Warfare**: Deploy units across North and South lanes. Balance your forces to prevent breakthroughs while pushing for advantage.
+
+**Defensive Structures**: Each lane has a defensive tower that automatically attacks nearby enemies. Towers must be destroyed before units can reach the enemy base.
+
+**Hero Units**: Your hero spawns on the battlefield as a powerful unit with unique abilities:
+- **Paladin** (Human): Divine Heal - restores health to nearby friendly units
+- **Death Knight** (Undead): Death Coil - deals massive damage to a target
+
+Heroes gain experience from kills, leveling up to become stronger. When a hero dies, they respawn after 30 seconds.
+
+**Active Base Defense**: Your fortress isn't defenseless! The main base automatically attacks approaching enemy units within range, providing a last line of defense.
 
 **Gold Economy**: Earn 5 gold per second passively. Control the middle section of the battlefield for bonus income (+3 gold/sec).
 
@@ -68,16 +78,31 @@ The AI opponent controls the Undead Legion with equivalent units:
 - Focus on basic units (Footman/Archer)
 - Establish map presence in both lanes
 - Save gold for tech tier 2 upgrade
+- Keep your hero alive to gain early levels
 
 **Mid Game** (5-15 minutes):
 - Upgrade to tier 2 when you have 200+ gold
 - Mix unit types for balanced army composition
 - Contest middle control for economic advantage
+- Use hero abilities to turn fights
 
 **Late Game** (15+ minutes):
 - Deploy tier 2 units for maximum impact
 - Push lanes with concentrated forces
-- Protect your fortress from enemy breakthroughs
+- Coordinate hero with unit pushes
+- Target enemy towers to open paths to their base
+
+**Defensive Structures**:
+- Towers have 800 HP and deal 30 damage per second
+- Destroy enemy towers to advance safely
+- Your towers protect against early rushes
+- Main base deals 50 damage per second to nearby enemies
+
+**Hero Management**:
+- Heroes are powerful but have 30-second respawn timers
+- Don't overextend your hero into dangerous positions
+- Use hero abilities at critical moments
+- Heroes gain XP faster in early game
 
 **Unit Composition**:
 - Melee units (Footman/Knight) tank damage and protect ranged units
@@ -89,7 +114,7 @@ The AI opponent controls the Undead Legion with equivalent units:
 - Use hotkeys to quickly respond to threats
 - Balance aggression with defense
 
-## Design Philosophy
+## Visual Design
 
 Lane Conquest embraces a **gritty low-fantasy aesthetic** inspired by dark medieval warfare:
 
@@ -97,6 +122,7 @@ Lane Conquest embraces a **gritty low-fantasy aesthetic** inspired by dark medie
 - **Muted color palette**: Earthy tones of mud, blood, and steel
 - **Asymmetric layout**: War table design with battlefield and control panels
 - **Medieval typography**: Classical serif fonts evoking historical manuscripts
+- **Distinct unit markers**: Heroes (★), Towers (⚔), Units (letters)
 
 The visual design reinforces the brutal, grounded nature of medieval conflict—no bright colors or clean lines, only the harsh reality of war.
 
@@ -107,11 +133,13 @@ The visual design reinforces the brutal, grounded nature of medieval conflict—
 - Tailwind CSS 4 for styling
 - Custom game engine running at 60 FPS
 - AI opponent with strategic decision-making
+- Real-time combat simulation with visual feedback
 
 **Performance**:
 - Optimized for smooth gameplay
 - Real-time combat simulation
 - Responsive controls and visual feedback
+- Automatic tower and building defense systems
 
 ## Credits
 

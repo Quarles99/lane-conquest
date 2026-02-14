@@ -11,7 +11,9 @@ import {
   GameState,
   HERO_STATS,
   Hero,
+  HeroAbility,
   HeroType,
+  HeroUnit,
   Lane,
   Unit,
   UNIT_STATS,
@@ -29,32 +31,90 @@ export function createInitialGameState(): GameState {
     playerGold: 100,
     playerTechTier: 1,
     playerHero: createHero('paladin', 'human'),
+    playerHeroUnit: null,
+    playerHeroRespawnTime: 0,
     playerUnits: [],
     playerBuilding: {
       faction: 'human',
       health: GAME_CONSTANTS.BUILDING_MAX_HEALTH,
       maxHealth: GAME_CONSTANTS.BUILDING_MAX_HEALTH,
+      attack: GAME_CONSTANTS.BUILDING_ATTACK,
+      attackSpeed: GAME_CONSTANTS.BUILDING_ATTACK_SPEED,
+      range: GAME_CONSTANTS.BUILDING_RANGE,
+      lastAttackTime: 0,
       isDead: false,
     },
+    playerTowers: [
+      createTower('human', 'top', 20),
+      createTower('human', 'bottom', 20),
+    ],
     
     aiGold: 100,
     aiTechTier: 1,
     aiHero: createHero('deathknight', 'undead'),
+    aiHeroUnit: null,
+    aiHeroRespawnTime: 0,
     aiUnits: [],
     aiBuilding: {
       faction: 'undead',
       health: GAME_CONSTANTS.BUILDING_MAX_HEALTH,
       maxHealth: GAME_CONSTANTS.BUILDING_MAX_HEALTH,
+      attack: GAME_CONSTANTS.BUILDING_ATTACK,
+      attackSpeed: GAME_CONSTANTS.BUILDING_ATTACK_SPEED,
+      range: GAME_CONSTANTS.BUILDING_RANGE,
+      lastAttackTime: 0,
       isDead: false,
     },
+    aiTowers: [
+      createTower('undead', 'top', 80),
+      createTower('undead', 'bottom', 80),
+    ],
     
     middleControlFaction: null,
     middleControlProgress: 0,
   };
 }
 
+function createTower(faction: Faction, lane: Lane, position: number) {
+  return {
+    id: nanoid(),
+    faction,
+    lane,
+    position,
+    health: GAME_CONSTANTS.TOWER_MAX_HEALTH,
+    maxHealth: GAME_CONSTANTS.TOWER_MAX_HEALTH,
+    attack: GAME_CONSTANTS.TOWER_ATTACK,
+    attackSpeed: GAME_CONSTANTS.TOWER_ATTACK_SPEED,
+    range: GAME_CONSTANTS.TOWER_RANGE,
+    lastAttackTime: 0,
+    isDead: false,
+  };
+}
+
 function createHero(type: HeroType, faction: Faction): Hero {
   const stats = HERO_STATS[type];
+  const abilities: HeroAbility[] = [];
+  
+  if (type === 'paladin') {
+    abilities.push({
+      id: 'heal',
+      name: 'Divine Heal',
+      cooldown: 20,
+      lastUsed: -20,
+      manaCost: 0,
+      description: 'Heal nearby friendly units',
+    });
+  } else if (type === 'deathknight') {
+    abilities.push({
+      id: 'damage',
+      name: 'Death Coil',
+      cooldown: 15,
+      lastUsed: -15,
+      manaCost: 0,
+      description: 'Deal massive damage to target',
+    });
+  }
+  
   return {
     type,
     faction,
@@ -64,8 +124,67 @@ function createHero(type: HeroType, faction: Faction): Hero {
     maxHealth: stats.baseHealth,
     attack: stats.baseAttack,
     attackSpeed: stats.attackSpeed,
-    abilities: [],
+    abilities,
   };
+}
+
+function createHeroUnit(hero: Hero, lane: Lane): HeroUnit {
+  const stats = HERO_STATS[hero.type];
+  return {
+    id: nanoid(),
+    type: hero.type as UnitType,
+    faction: hero.faction,
+    lane,
+    position: hero.faction === 'human' ? 10 : 90,
+    health: hero.health,
+    maxHealth: hero.maxHealth,
+    attack: hero.attack,
+    attackSpeed: hero.attackSpeed,
+    moveSpeed: 4,
+    range: 2,
+    lastAttackTime: 0,
+    target: null,
+    isDead: false,
+    heroType: hero.type,
+    level: hero.level,
+    xp: hero.xp,
+    abilities: hero.abilities,
+    isHero: true,
+  };
+}
+
+function updateHeroSpawning(state: GameState, deltaTime: number): GameState {
+  // Spawn player hero if not present and not on cooldown
+  if (!state.playerHeroUnit && state.playerHeroRespawnTime <= 0) {
+    state.playerHeroUnit = createHeroUnit(state.playerHero, 'top');
+  }
+  
+  // Spawn AI hero if not present and not on cooldown
+  if (!state.aiHeroUnit && state.aiHeroRespawnTime <= 0) {
+    state.aiHeroUnit = createHeroUnit(state.aiHero, 'top');
+  }
+  
+  // Check if player hero died
+  if (state.playerHeroUnit && state.playerHeroUnit.isDead) {
+    state.playerHeroRespawnTime = GAME_CONSTANTS.HERO_RESPAWN_TIME;
+    state.playerHeroUnit = null;
+  }
+  
+  // Check if AI hero died
+  if (state.aiHeroUnit && state.aiHeroUnit.isDead) {
+    state.aiHeroRespawnTime = GAME_CONSTANTS.HERO_RESPAWN_TIME;
+    state.aiHeroUnit = null;
+  }
+  
+  // Decrement respawn timers
+  if (state.playerHeroRespawnTime > 0) {
+    state.playerHeroRespawnTime -= deltaTime;
+  }
+  if (state.aiHeroRespawnTime > 0) {
+    state.aiHeroRespawnTime -= deltaTime;
+  }
+  
+  return state;
 }
 
 export function spawnUnit(
@@ -133,6 +252,9 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
   // Update middle control
   state = updateMiddleControl(state, deltaTime);
   
+  // Update hero spawning and respawning
+  state = updateHeroSpawning(state, deltaTime);
+  
   // Update AI
   state = updateAI(state);
   
@@ -141,6 +263,10 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
   
   // Combat
   state = resolveCombat(state, deltaTime);
+  
+  // Tower and building attacks
+  state = resolveTowerAttacks(state, deltaTime);
+  state = resolveBuildingAttacks(state, deltaTime);
   
   // Remove dead units
   state.playerUnits = state.playerUnits.filter(u => !u.isDead);
@@ -192,7 +318,12 @@ function updateMiddleControl(state: GameState, deltaTime: number): GameState {
 }
 
 function moveUnits(state: GameState, deltaTime: number): GameState {
-  const allUnits = [...state.playerUnits, ...state.aiUnits];
+  const allUnits: (Unit | HeroUnit)[] = [
+    ...state.playerUnits,
+    ...state.aiUnits,
+    ...(state.playerHeroUnit ? [state.playerHeroUnit] : []),
+    ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
+  ];
   
   for (const unit of allUnits) {
     if (unit.isDead) continue;
@@ -251,7 +382,12 @@ function moveUnits(state: GameState, deltaTime: number): GameState {
 }
 
 function resolveCombat(state: GameState, deltaTime: number): GameState {
-  const allUnits = [...state.playerUnits, ...state.aiUnits];
+  const allUnits: (Unit | HeroUnit)[] = [
+    ...state.playerUnits,
+    ...state.aiUnits,
+    ...(state.playerHeroUnit ? [state.playerHeroUnit] : []),
+    ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
+  ];
   
   for (const unit of allUnits) {
     if (unit.isDead || !unit.target) continue;
@@ -282,6 +418,120 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
         } else {
           state.aiHero.xp += GAME_CONSTANTS.XP_PER_KILL_BASE;
           state = checkHeroLevelUp(state, 'undead');
+        }
+      }
+    }
+  }
+  
+  return state;
+}
+
+function resolveTowerAttacks(state: GameState, deltaTime: number): GameState {
+  const allTowers = [...state.playerTowers, ...state.aiTowers];
+  const allUnits: (Unit | HeroUnit)[] = [
+    ...state.playerUnits,
+    ...state.aiUnits,
+    ...(state.playerHeroUnit ? [state.playerHeroUnit] : []),
+    ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
+  ];
+  
+  for (const tower of allTowers) {
+    if (tower.isDead) continue;
+    
+    // Find enemies in same lane within range
+    const enemies = allUnits.filter(
+      u => u.faction !== tower.faction && 
+           u.lane === tower.lane && 
+           !u.isDead &&
+           Math.abs(u.position - tower.position) <= tower.range
+    );
+    
+    if (enemies.length === 0) continue;
+    
+    // Attack closest enemy
+    const closest = enemies.reduce((prev, curr) => {
+      const prevDist = Math.abs(prev.position - tower.position);
+      const currDist = Math.abs(curr.position - tower.position);
+      return currDist < prevDist ? curr : prev;
+    });
+    
+    const timeSinceLastAttack = state.matchTime - tower.lastAttackTime;
+    const attackCooldown = 1 / tower.attackSpeed;
+    
+    if (timeSinceLastAttack >= attackCooldown) {
+      closest.health -= tower.attack;
+      tower.lastAttackTime = state.matchTime;
+      
+      if (closest.health <= 0) {
+        closest.isDead = true;
+      }
+    }
+  }
+  
+  // Remove dead towers
+  state.playerTowers = state.playerTowers.filter(t => !t.isDead);
+  state.aiTowers = state.aiTowers.filter(t => !t.isDead);
+  
+  return state;
+}
+
+function resolveBuildingAttacks(state: GameState, deltaTime: number): GameState {
+  const allUnits: (Unit | HeroUnit)[] = [
+    ...state.playerUnits,
+    ...state.aiUnits,
+    ...(state.playerHeroUnit ? [state.playerHeroUnit] : []),
+    ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
+  ];
+  
+  // Player building attacks
+  if (!state.playerBuilding.isDead) {
+    const enemies = allUnits.filter(
+      u => u.faction === 'undead' && 
+           !u.isDead &&
+           u.position <= state.playerBuilding.range
+    );
+    
+    if (enemies.length > 0) {
+      const closest = enemies.reduce((prev, curr) => 
+        curr.position < prev.position ? curr : prev
+      );
+      
+      const timeSinceLastAttack = state.matchTime - state.playerBuilding.lastAttackTime;
+      const attackCooldown = 1 / state.playerBuilding.attackSpeed;
+      
+      if (timeSinceLastAttack >= attackCooldown) {
+        closest.health -= state.playerBuilding.attack;
+        state.playerBuilding.lastAttackTime = state.matchTime;
+        
+        if (closest.health <= 0) {
+          closest.isDead = true;
+        }
+      }
+    }
+  }
+  
+  // AI building attacks
+  if (!state.aiBuilding.isDead) {
+    const enemies = allUnits.filter(
+      u => u.faction === 'human' && 
+           !u.isDead &&
+           u.position >= (100 - state.aiBuilding.range)
+    );
+    
+    if (enemies.length > 0) {
+      const closest = enemies.reduce((prev, curr) => 
+        curr.position > prev.position ? curr : prev
+      );
+      
+      const timeSinceLastAttack = state.matchTime - state.aiBuilding.lastAttackTime;
+      const attackCooldown = 1 / state.aiBuilding.attackSpeed;
+      
+      if (timeSinceLastAttack >= attackCooldown) {
+        closest.health -= state.aiBuilding.attack;
+        state.aiBuilding.lastAttackTime = state.matchTime;
+        
+        if (closest.health <= 0) {
+          closest.isDead = true;
         }
       }
     }

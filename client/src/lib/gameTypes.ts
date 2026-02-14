@@ -37,18 +37,47 @@ export interface Hero {
   abilities: HeroAbility[];
 }
 
+export interface HeroUnit extends Unit {
+  heroType: HeroType;
+  level: number;
+  xp: number;
+  abilities: HeroAbility[];
+  isHero: true;
+}
+
+export type AbilityType = 'heal' | 'damage' | 'buff';
+
 export interface HeroAbility {
-  id: string;
+  id: AbilityType;
   name: string;
   cooldown: number;
   lastUsed: number;
-  isActive: boolean;
+  manaCost: number;
+  description: string;
 }
 
 export interface Building {
   faction: Faction;
   health: number;
   maxHealth: number;
+  attack: number;
+  attackSpeed: number;
+  range: number;
+  lastAttackTime: number;
+  isDead: boolean;
+}
+
+export interface Tower {
+  id: string;
+  faction: Faction;
+  lane: Lane;
+  position: number;
+  health: number;
+  maxHealth: number;
+  attack: number;
+  attackSpeed: number;
+  range: number;
+  lastAttackTime: number;
   isDead: boolean;
 }
 
@@ -62,15 +91,21 @@ export interface GameState {
   playerGold: number;
   playerTechTier: number;
   playerHero: Hero;
+  playerHeroUnit: HeroUnit | null;
+  playerHeroRespawnTime: number;
   playerUnits: Unit[];
   playerBuilding: Building;
+  playerTowers: Tower[];
   
   // AI resources
   aiGold: number;
   aiTechTier: number;
   aiHero: Hero;
+  aiHeroUnit: HeroUnit | null;
+  aiHeroRespawnTime: number;
   aiUnits: Unit[];
   aiBuilding: Building;
+  aiTowers: Tower[];
   
   // Middle control
   middleControlFaction: Faction | null;
@@ -188,9 +223,17 @@ export const GAME_CONSTANTS = {
   XP_PER_KILL_BASE: 10,
   XP_PER_LEVEL: 100,
   MAX_HERO_LEVEL: 10,
+  HERO_RESPAWN_TIME: 30, // seconds
   TECH_TIER_2_COST: 200,
   TECH_TIER_3_COST: 400,
   BUILDING_MAX_HEALTH: 2000,
+  BUILDING_ATTACK: 50,
+  BUILDING_ATTACK_SPEED: 0.5,
+  BUILDING_RANGE: 15,
+  TOWER_MAX_HEALTH: 800,
+  TOWER_ATTACK: 30,
+  TOWER_ATTACK_SPEED: 1.0,
+  TOWER_RANGE: 20,
   MIDDLE_CONTROL_SPEED: 5, // points per second
   LANE_LENGTH: 100,
 };
