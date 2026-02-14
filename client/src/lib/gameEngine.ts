@@ -37,6 +37,21 @@ export function createInitialGameState(): GameState {
     isPaused: false,
     matchTime: 0,
     winner: null,
+    gameOver: false,
+    playerStats: {
+      unitsKilled: 0,
+      damageDealt: 0,
+      goldEarned: 0,
+      towersDestroyed: 0,
+      heroLevel: 1,
+    },
+    aiStats: {
+      unitsKilled: 0,
+      damageDealt: 0,
+      goldEarned: 0,
+      towersDestroyed: 0,
+      heroLevel: 1,
+    },
     
     playerGold: 100,
     playerTechTier: 1,
@@ -62,6 +77,8 @@ export function createInitialGameState(): GameState {
     northLaneWaveTimer: GAME_CONSTANTS.WAVE_SPAWN_INTERVAL,
     southLaneWaveTimer: GAME_CONSTANTS.WAVE_SPAWN_INTERVAL + GAME_CONSTANTS.SOUTH_LANE_DELAY,
     heroWaveCounter: 0,
+    playerGoldMines: 0,
+    playerGoldMineCooldown: 0,
     
     aiGold: 100,
     aiTechTier: 1,
@@ -84,6 +101,8 @@ export function createInitialGameState(): GameState {
       createTower('undead', 'bottom', 80),
     ],
     aiFormation: [],
+    aiGoldMines: 0,
+    aiGoldMineCooldown: 0,
     
     middleControlFaction: null,
     middleControlProgress: 0,
@@ -353,6 +372,28 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
     state.aiGold += GAME_CONSTANTS.GOLD_BONUS_MIDDLE_CONTROL * deltaTime;
   }
   
+  // Gold mine income
+  state.playerGold += state.playerGoldMines * GAME_CONSTANTS.GOLD_MINE_INCOME * deltaTime;
+  state.aiGold += state.aiGoldMines * GAME_CONSTANTS.GOLD_MINE_INCOME * deltaTime;
+  
+  // Update gold mine cooldowns
+  if (state.playerGoldMineCooldown > 0) {
+    state.playerGoldMineCooldown = Math.max(0, state.playerGoldMineCooldown - deltaTime);
+  }
+  if (state.aiGoldMineCooldown > 0) {
+    state.aiGoldMineCooldown = Math.max(0, state.aiGoldMineCooldown - deltaTime);
+  }
+  
+  // Track gold earned for stats
+  const playerGoldThisFrame = (GAME_CONSTANTS.GOLD_PER_SECOND + 
+    (state.middleControlFaction === 'human' ? GAME_CONSTANTS.GOLD_BONUS_MIDDLE_CONTROL : 0) +
+    state.playerGoldMines * GAME_CONSTANTS.GOLD_MINE_INCOME) * deltaTime;
+  const aiGoldThisFrame = (GAME_CONSTANTS.GOLD_PER_SECOND + 
+    (state.middleControlFaction === 'undead' ? GAME_CONSTANTS.GOLD_BONUS_MIDDLE_CONTROL : 0) +
+    state.aiGoldMines * GAME_CONSTANTS.GOLD_MINE_INCOME) * deltaTime;
+  state.playerStats.goldEarned += playerGoldThisFrame;
+  state.aiStats.goldEarned += aiGoldThisFrame;
+  
   // Update middle control
   state = updateMiddleControl(state, deltaTime);
   
@@ -377,12 +418,16 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
   state.aiUnits = state.aiUnits.filter(u => !u.isDead);
   
   // Check win condition
-  if (state.playerBuilding.health <= 0) {
+  if (state.playerBuilding.health <= 0 && !state.gameOver) {
     state.winner = 'undead';
+    state.gameOver = true;
     state.playerBuilding.isDead = true;
-  } else if (state.aiBuilding.health <= 0) {
+    soundSystem.defeat();
+  } else if (state.aiBuilding.health <= 0 && !state.gameOver) {
     state.winner = 'human';
+    state.gameOver = true;
     state.aiBuilding.isDead = true;
+    soundSystem.victory();
   }
   
   return state;
@@ -555,8 +600,16 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
       );
       
       // Deal damage
-      target.health -= unit.attack;
+      const damageDealt = unit.attack;
+      target.health -= damageDealt;
       unit.lastAttackTime = state.matchTime;
+      
+      // Track damage dealt
+      if (unit.faction === 'human') {
+        state.playerStats.damageDealt += damageDealt;
+      } else {
+        state.aiStats.damageDealt += damageDealt;
+      }
       
       // Create hit effect
       animationManager.createEffect(target.position, targetLaneY, 'hit', target.faction);
@@ -570,6 +623,13 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
         
         // Play death sound
         soundSystem.unitDeath();
+        
+        // Track kills
+        if (unit.faction === 'human') {
+          state.playerStats.unitsKilled++;
+        } else {
+          state.aiStats.unitsKilled++;
+        }
         
         // Award XP to hero
         if (unit.faction === 'human') {
@@ -647,7 +707,21 @@ function resolveTowerAttacks(state: GameState, deltaTime: number): GameState {
     }
   }
   
-  // Remove dead towers
+  // Remove dead towers and award gold
+  const playerTowersDestroyed = state.playerTowers.filter(t => t.isDead).length;
+  const aiTowersDestroyed = state.aiTowers.filter(t => t.isDead).length;
+  
+  if (playerTowersDestroyed > 0) {
+    state.aiGold += playerTowersDestroyed * GAME_CONSTANTS.TOWER_DESTROY_REWARD;
+    state.aiStats.towersDestroyed += playerTowersDestroyed;
+    state.aiStats.goldEarned += playerTowersDestroyed * GAME_CONSTANTS.TOWER_DESTROY_REWARD;
+  }
+  if (aiTowersDestroyed > 0) {
+    state.playerGold += aiTowersDestroyed * GAME_CONSTANTS.TOWER_DESTROY_REWARD;
+    state.playerStats.towersDestroyed += aiTowersDestroyed;
+    state.playerStats.goldEarned += aiTowersDestroyed * GAME_CONSTANTS.TOWER_DESTROY_REWARD;
+  }
+  
   state.playerTowers = state.playerTowers.filter(t => !t.isDead);
   state.aiTowers = state.aiTowers.filter(t => !t.isDead);
   
@@ -766,6 +840,13 @@ function checkHeroLevelUp(state: GameState, faction: Faction): GameState {
     hero.maxHealth += stats.healthPerLevel;
     hero.health = hero.maxHealth;
     hero.attack += stats.attackPerLevel;
+    
+    // Update stats
+    if (faction === 'human') {
+      state.playerStats.heroLevel = hero.level;
+    } else {
+      state.aiStats.heroLevel = hero.level;
+    }
   }
   
   return state;

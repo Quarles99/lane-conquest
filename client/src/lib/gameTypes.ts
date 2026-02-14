@@ -87,11 +87,22 @@ export interface FormationSlot {
   isActive: boolean; // Whether this slot is producing units
 }
 
+export interface MatchStatistics {
+  unitsKilled: number;
+  damageDealt: number;
+  goldEarned: number;
+  towersDestroyed: number;
+  heroLevel: number;
+}
+
 export interface GameState {
   isPlaying: boolean;
   isPaused: boolean;
   matchTime: number;
   winner: Faction | null;
+  gameOver: boolean;
+  playerStats: MatchStatistics;
+  aiStats: MatchStatistics;
   
   // Player resources
   playerGold: number;
@@ -106,6 +117,8 @@ export interface GameState {
   northLaneWaveTimer: number; // Time until next north lane wave
   southLaneWaveTimer: number; // Time until next south lane wave
   heroWaveCounter: number; // Tracks which wave heroes spawn on (alternates lanes)
+  playerGoldMines: number; // Number of gold mines purchased
+  playerGoldMineCooldown: number; // Cooldown until next mine can be purchased
   
   // AI resources
   aiGold: number;
@@ -117,6 +130,8 @@ export interface GameState {
   aiBuilding: Building;
   aiTowers: Tower[];
   aiFormation: FormationSlot[]; // AI unit production queue
+  aiGoldMines: number; // Number of gold mines purchased
+  aiGoldMineCooldown: number; // Cooldown until next mine can be purchased
   
   // Middle control
   middleControlFaction: Faction | null;
@@ -249,4 +264,9 @@ export const GAME_CONSTANTS = {
   LANE_LENGTH: 100,
   WAVE_SPAWN_INTERVAL: 30, // seconds between waves
   SOUTH_LANE_DELAY: 15, // seconds delay for south lane waves
+  GOLD_MINE_BASE_COST: 100, // Base cost for first gold mine
+  GOLD_MINE_COST_MULTIPLIER: 1.5, // Each mine costs 1.5x more
+  GOLD_MINE_INCOME: 2, // Additional gold per second per mine
+  GOLD_MINE_COOLDOWN: 20, // Seconds between purchases
+  TOWER_DESTROY_REWARD: 200, // Gold awarded for destroying a tower
 };

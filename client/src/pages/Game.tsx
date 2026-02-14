@@ -7,11 +7,13 @@
 
 import Battlefield from "@/components/Battlefield";
 import UnitTooltip from "@/components/UnitTooltip";
+import { GameOverOverlay } from "@/components/GameOverOverlay";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { createInitialGameState, addToFormation, updateGameState, upgradeTechTier } from "@/lib/gameEngine";
+import { canPurchaseGoldMine, getGoldMineCost, purchaseGoldMine } from "@/lib/goldMine";
 import { GAME_CONSTANTS, GameState, Lane, UNIT_STATS, UnitType } from "@/lib/gameTypes";
 import { useKeyboardControls } from "@/hooks/useKeyboardControls";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -95,6 +97,18 @@ export default function Game() {
 
   return (
     <div className="min-h-screen w-full relative overflow-hidden vignette">
+      {/* Game Over Overlay */}
+      {gameState.gameOver && gameState.winner && (
+        <GameOverOverlay
+          winner={gameState.winner}
+          playerFaction="human"
+          matchTime={gameState.matchTime}
+          playerStats={gameState.playerStats}
+          aiStats={gameState.aiStats}
+          onPlayAgain={() => setGameState(createInitialGameState())}
+          onMainMenu={() => setGameState(createInitialGameState())}
+        />
+      )}
       {/* Battlefield background */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -279,30 +293,91 @@ export default function Game() {
                 )}
               </Card>
 
+              {/* Gold Mine */}
+              <Card className="bg-secondary/50 border-2 border-primary/20 p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-ui text-muted-foreground">Gold Mines</span>
+                  <span className="text-2xl font-display text-amber-400">{gameState.playerGoldMines}</span>
+                </div>
+                <div className="text-xs text-muted-foreground font-ui mb-2">
+                  +{gameState.playerGoldMines * GAME_CONSTANTS.GOLD_MINE_INCOME} gold/sec
+                </div>
+                <Button 
+                  onClick={() => setGameState(prev => purchaseGoldMine({ ...prev }))}
+                  disabled={!canPurchaseGoldMine(gameState)}
+                  size="sm"
+                  variant="outline"
+                  className="w-full bg-accent/20 border-accent/40 hover:bg-accent/30"
+                >
+                  <span className="font-ui">Purchase Gold Mine</span>
+                  <span className="ml-auto text-accent-foreground font-ui">{getGoldMineCost(gameState.playerGoldMines)} Gold</span>
+                </Button>
+                {gameState.playerGoldMineCooldown > 0 && (
+                  <div className="text-xs text-center mt-2 text-muted-foreground font-ui">
+                    Cooldown: {Math.ceil(gameState.playerGoldMineCooldown)}s
+                  </div>
+                )}
+              </Card>
+
               {/* Formation Queue Display */}
               {gameState.playerFormation.length > 0 && (
                 <Card className="p-4 bg-card/50 border-primary/30">
                   <h3 className="text-sm font-display text-primary mb-3">Active Formation</h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between text-xs bg-card/30 p-2 rounded border border-accent/30">
-                      <span className="font-ui text-accent-foreground">North Lane Wave</span>
-                      <span className="text-accent font-ui font-bold">{Math.ceil(gameState.northLaneWaveTimer)}s</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs bg-card/30 p-2 rounded border border-accent/30">
-                      <span className="font-ui text-accent-foreground">South Lane Wave</span>
-                      <span className="text-accent font-ui font-bold">{Math.ceil(gameState.southLaneWaveTimer)}s</span>
-                    </div>
-                    <div className="space-y-1 pt-2 border-t border-border/30">
-                      {gameState.playerFormation.map((slot, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm bg-card/20 p-2 rounded">
-                          <span className="font-ui capitalize text-foreground/80">
-                            {slot.unitType}
-                          </span>
-                          <span className="text-xs text-muted-foreground font-ui">
-                            {slot.lane === 'top' ? 'North' : 'South'}
-                          </span>
+                    {/* North Lane */}
+                    <div className="bg-card/30 p-3 rounded border border-accent/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-ui text-accent-foreground font-semibold">⬆ North Lane</span>
+                        <span className="text-accent font-ui font-bold">{Math.ceil(gameState.northLaneWaveTimer)}s</span>
+                      </div>
+                      {/* Hero indicator for north lane */}
+                      {gameState.heroWaveCounter % 2 === 0 && (
+                        <div className="flex items-center gap-2 text-xs bg-amber-900/30 p-2 rounded border border-amber-600/30 mb-1">
+                          <span className="text-amber-400">★</span>
+                          <span className="text-amber-200 font-semibold">Hero spawns next wave</span>
                         </div>
-                      ))}
+                      )}
+                      {/* Units in north lane */}
+                      <div className="space-y-1">
+                        {gameState.playerFormation.filter(slot => slot.lane === 'top').map((slot, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm bg-card/20 p-2 rounded">
+                            <span className="font-ui capitalize text-foreground/80">
+                              {slot.unitType}
+                            </span>
+                          </div>
+                        ))}
+                        {gameState.playerFormation.filter(slot => slot.lane === 'top').length === 0 && (
+                          <div className="text-xs text-muted-foreground italic p-2">No units hired</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* South Lane */}
+                    <div className="bg-card/30 p-3 rounded border border-accent/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-ui text-accent-foreground font-semibold">⬇ South Lane</span>
+                        <span className="text-accent font-ui font-bold">{Math.ceil(gameState.southLaneWaveTimer)}s</span>
+                      </div>
+                      {/* Hero indicator for south lane */}
+                      {gameState.heroWaveCounter % 2 === 1 && (
+                        <div className="flex items-center gap-2 text-xs bg-amber-900/30 p-2 rounded border border-amber-600/30 mb-1">
+                          <span className="text-amber-400">★</span>
+                          <span className="text-amber-200 font-semibold">Hero spawns next wave</span>
+                        </div>
+                      )}
+                      {/* Units in south lane */}
+                      <div className="space-y-1">
+                        {gameState.playerFormation.filter(slot => slot.lane === 'bottom').map((slot, idx) => (
+                          <div key={idx} className="flex items-center justify-between text-sm bg-card/20 p-2 rounded">
+                            <span className="font-ui capitalize text-foreground/80">
+                              {slot.unitType}
+                            </span>
+                          </div>
+                        ))}
+                        {gameState.playerFormation.filter(slot => slot.lane === 'bottom').length === 0 && (
+                          <div className="text-xs text-muted-foreground italic p-2">No units hired</div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </Card>
