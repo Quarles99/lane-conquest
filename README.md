@@ -9,7 +9,9 @@ A gritty low-fantasy strategy tug-of-war game inspired by Warcraft 3 Direct Stri
 **Match Length**: 15-25 minutes  
 **Factions**: Human Empire vs Undead Legion
 
-## Play Now: https://laneconq-gq4aq5qm.manus.space
+## Play Now: 
+
+https://laneconq-gq4aq5qm.manus.space
 
 ## How to Play
 
