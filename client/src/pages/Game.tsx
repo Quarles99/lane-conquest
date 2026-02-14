@@ -20,6 +20,7 @@ export default function Game() {
   const [gameState, setGameState] = useState<GameState>(() => createInitialGameState());
   const lastUpdateRef = useRef<number>(Date.now());
   const animationFrameRef = useRef<number | undefined>(undefined);
+  const frameTimesRef = useRef<number[]>([]);
 
   // Game loop
   useEffect(() => {
@@ -29,10 +30,22 @@ export default function Game() {
 
     const gameLoop = () => {
       const now = Date.now();
-      const deltaTime = Math.min((now - lastUpdateRef.current) / 1000, 0.1); // Cap delta time
+      let deltaTime = (now - lastUpdateRef.current) / 1000;
       lastUpdateRef.current = now;
 
-      setGameState(prevState => updateGameState(prevState, deltaTime));
+      // Frame time smoothing to reduce jitter
+      frameTimesRef.current.push(deltaTime);
+      if (frameTimesRef.current.length > 5) {
+        frameTimesRef.current.shift();
+      }
+      
+      // Use average of last 5 frames
+      const smoothedDelta = frameTimesRef.current.reduce((a, b) => a + b, 0) / frameTimesRef.current.length;
+      
+      // Cap delta time to prevent huge jumps (max 0.1s = 10 FPS minimum)
+      const cappedDelta = Math.min(smoothedDelta, 0.1);
+
+      setGameState(prevState => updateGameState(prevState, cappedDelta));
       
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
