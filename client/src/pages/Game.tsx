@@ -99,6 +99,18 @@ export default function Game() {
         <div className="w-[65%] flex flex-col p-6">
           {/* Top HUD */}
           <div className="flex justify-between items-start mb-4">
+            {/* Quit Button */}
+            {gameState.isPlaying && (
+              <Button 
+                onClick={() => setGameState(createInitialGameState())}
+                variant="destructive"
+                size="sm"
+                className="font-ui"
+              >
+                Quit
+              </Button>
+            )}
+            
             {/* Match info */}
             <Card className="texture-parchment bg-card/90 backdrop-blur-sm border-2 border-primary/30 p-4">
               <div className="flex gap-6 items-center">
