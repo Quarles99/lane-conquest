@@ -309,6 +309,9 @@ export function updateGameState(state: GameState, deltaTime: number): GameState 
   animationManager.update(deltaTime);
   if (!state.isPlaying || state.isPaused || state.winner) return state;
   
+  // Create a shallow copy to avoid mutating the input
+  state = { ...state };
+  
   // Update match time
   state.matchTime += deltaTime;
   
