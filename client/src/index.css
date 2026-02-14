@@ -3,11 +3,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* 
+  GRITTY LOW-FANTASY DESIGN
+  - Weathered textures, muted earthy tones
+  - Asymmetric layouts, torn edges
+  - Medieval typography with weight
+*/
+
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -32,94 +39,70 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+  
+  --font-display: "Cinzel", serif;
+  --font-body: "Crimson Text", serif;
+  --font-ui: "Alegreya Sans", sans-serif;
 }
 
 :root {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-600);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.98 0.001 286.375);
-  --secondary-foreground: oklch(0.4 0.015 65);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.141 0.005 285.823);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
-}
-
-.dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  /* Gritty medieval color palette */
+  --background: oklch(0.18 0.01 50);  /* Charcoal stone #2a2520 */
+  --foreground: oklch(0.85 0.01 50);  /* Weathered parchment text */
+  --card: oklch(0.22 0.015 40);  /* Weathered leather #4a3f35 */
+  --card-foreground: oklch(0.88 0.01 50);
+  --popover: oklch(0.20 0.015 40);
+  --popover-foreground: oklch(0.88 0.01 50);
+  
+  /* Human faction - faded banner gold */
+  --primary: oklch(0.50 0.05 70);  /* Tarnished bronze #8b7355 */
+  --primary-foreground: oklch(0.95 0.01 50);
+  
+  /* Undead faction - dried blood crimson */
+  --destructive: oklch(0.35 0.10 30);  /* Dried blood #5c1a1a */
+  --destructive-foreground: oklch(0.95 0.01 50);
+  
+  --secondary: oklch(0.28 0.02 45);  /* Dark wood */
+  --secondary-foreground: oklch(0.80 0.01 50);
+  --muted: oklch(0.25 0.015 45);
+  --muted-foreground: oklch(0.60 0.01 50);
+  --accent: oklch(0.32 0.03 50);  /* Rusted metal accent */
+  --accent-foreground: oklch(0.90 0.01 50);
+  
+  --border: oklch(0.30 0.02 45);  /* Dark border */
+  --input: oklch(0.25 0.015 45);
+  --ring: oklch(0.50 0.05 70);
+  
+  --chart-1: oklch(0.45 0.08 30);
+  --chart-2: oklch(0.50 0.05 70);
+  --chart-3: oklch(0.35 0.04 50);
+  --chart-4: oklch(0.40 0.06 60);
+  --chart-5: oklch(0.30 0.08 40);
+  
+  --radius: 0px;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    line-height: 1.6;
   }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  
+  button, [role="button"], input, select {
+    font-family: var(--font-ui);
+  }
+  
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),
@@ -134,24 +117,11 @@
 }
 
 @layer components {
-  /**
-   * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
-   */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -162,16 +132,45 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
+  }
+  
+  /* Gritty texture overlays */
+  .texture-parchment {
+    position: relative;
+  }
+  
+  .texture-parchment::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url('https://private-us-east-1.manuscdn.com/sessionFile/Tk5HoCi3w8SyCtlhgEnaja/sandbox/SEjupRAqVyjm0vxnfBuaIE-img-4_1771051686000_na1fn_cGFyY2htZW50LXRleHR1cmU.png?x-oss-process=image/resize,w_1920,h_1920/format,webp/quality,q_80&Expires=1798761600&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvVGs1SG9DaTN3OFN5Q3RsaGdFbmFqYS9zYW5kYm94L1NFanVwUkFxVnlqbTB2eG5mQnVhSUUtaW1nLTRfMTc3MTA1MTY4NjAwMF9uYTFmbl9jR0Z5WTJodFpXNTBMWFJsZUhSMWNtVS5wbmc~eC1vc3MtcHJvY2Vzcz1pbWFnZS9yZXNpemUsd18xOTIwLGhfMTkyMC9mb3JtYXQsd2VicC9xdWFsaXR5LHFfODAiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3OTg3NjE2MDB9fX1dfQ__&Key-Pair-Id=K2HSFNDJXOU9YS&Signature=MzFv8yGf15jKQTmyXm0is4eE83dPV0ii8f6oxd29SemQfjc0WI9zxs6CIjJq6TK76XAfoywGFlSfPOPT9M7CdPX9l1mSxLhAleVCwLbzEWsB5F5PLgj4~wKTzXZV1YnmZX4o656n6KAXLdA2TIiXVGZvei9~i0POYClId9o2S-7NTnWQgSNzrVcq3CP7daL4yyh-SVtd1KL-px-90ZxmD-7vP7VrQHls8ItG-oM3PsvZryhhMVPZVXE93RqixSWyEx8xTKn-S5o1cXOTm64hSwKZLPQ~Gb6c~wia5pzDG2LhMpyhVOo0LLWY-PKU-xyjIriB1T3odT6P5W~FdWJkCQ__');
+    background-size: 400px 400px;
+    opacity: 0.15;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  
+  /* Vignette effect */
+  .vignette {
+    position: relative;
+  }
+  
+  .vignette::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.4) 100%);
+    pointer-events: none;
   }
 }
