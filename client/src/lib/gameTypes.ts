@@ -84,7 +84,6 @@ export interface Tower {
 export interface FormationSlot {
   unitType: UnitType;
   lane: Lane;
-  spawnTimer: number; // Time until next spawn
   isActive: boolean; // Whether this slot is producing units
 }
 
@@ -104,6 +103,9 @@ export interface GameState {
   playerBuilding: Building;
   playerTowers: Tower[];
   playerFormation: FormationSlot[]; // Unit production queue
+  northLaneWaveTimer: number; // Time until next north lane wave
+  southLaneWaveTimer: number; // Time until next south lane wave
+  heroWaveCounter: number; // Tracks which wave heroes spawn on (alternates lanes)
   
   // AI resources
   aiGold: number;
@@ -245,5 +247,6 @@ export const GAME_CONSTANTS = {
   TOWER_RANGE: 20,
   MIDDLE_CONTROL_SPEED: 5, // points per second
   LANE_LENGTH: 100,
-  UNIT_SPAWN_INTERVAL: 8, // seconds between auto-spawns from formation
+  WAVE_SPAWN_INTERVAL: 30, // seconds between waves
+  SOUTH_LANE_DELAY: 15, // seconds delay for south lane waves
 };

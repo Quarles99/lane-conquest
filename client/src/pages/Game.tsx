@@ -188,7 +188,7 @@ export default function Game() {
               <Card className="bg-secondary/50 border-2 border-primary/20 p-6">
                 <h2 className="text-xl font-display text-foreground mb-3">Battle Instructions</h2>
                 <div className="space-y-2 text-sm text-muted-foreground font-body leading-relaxed">
-                  <p>Hire units once to add them to your formation. Each hired unit will automatically spawn every 8 seconds, creating a continuous army production line.</p>
+                  <p>Hire units once to add them to your formation. Units spawn in waves every 30 seconds. The South Lane spawns 15 seconds after the North Lane. Heroes spawn with the waves, alternating between lanes each cycle.</p>
                   <p>Destroy the enemy fortress to claim victory. Upgrade your hero through combat experience and advance through three technology tiers.</p>
                   <p>Control the middle section of the battlefield to gain bonus gold income and strategic advantage.</p>
                 </div>
@@ -256,19 +256,29 @@ export default function Game() {
 
               {/* Formation Queue Display */}
               {gameState.playerFormation.length > 0 && (
-                <Card className="bg-secondary/50 border-2 border-primary/20 p-4">
-                  <h3 className="text-sm font-ui text-muted-foreground uppercase tracking-wider mb-3">Active Formation</h3>
-                  <div className="space-y-2">
-                    {gameState.playerFormation.map((slot, idx) => (
-                      <div key={idx} className="flex items-center justify-between text-sm bg-card/30 p-2 rounded border border-primary/20">
-                        <span className="font-ui capitalize">
-                          {slot.unitType} ({slot.lane === 'top' ? 'North' : 'South'})
-                        </span>
-                        <span className="text-xs text-accent-foreground font-ui">
-                          Next: {Math.ceil(slot.spawnTimer)}s
-                        </span>
-                      </div>
-                    ))}
+                <Card className="p-4 bg-card/50 border-primary/30">
+                  <h3 className="text-sm font-display text-primary mb-3">Active Formation</h3>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-xs bg-card/30 p-2 rounded border border-accent/30">
+                      <span className="font-ui text-accent-foreground">North Lane Wave</span>
+                      <span className="text-accent font-ui font-bold">{Math.ceil(gameState.northLaneWaveTimer)}s</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs bg-card/30 p-2 rounded border border-accent/30">
+                      <span className="font-ui text-accent-foreground">South Lane Wave</span>
+                      <span className="text-accent font-ui font-bold">{Math.ceil(gameState.southLaneWaveTimer)}s</span>
+                    </div>
+                    <div className="space-y-1 pt-2 border-t border-border/30">
+                      {gameState.playerFormation.map((slot, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm bg-card/20 p-2 rounded">
+                          <span className="font-ui capitalize text-foreground/80">
+                            {slot.unitType}
+                          </span>
+                          <span className="text-xs text-muted-foreground font-ui">
+                            {slot.lane === 'top' ? 'North' : 'South'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </Card>
               )}

@@ -59,6 +59,9 @@ export function createInitialGameState(): GameState {
       createTower('human', 'bottom', 20),
     ],
     playerFormation: [],
+    northLaneWaveTimer: GAME_CONSTANTS.WAVE_SPAWN_INTERVAL,
+    southLaneWaveTimer: GAME_CONSTANTS.WAVE_SPAWN_INTERVAL + GAME_CONSTANTS.SOUTH_LANE_DELAY,
+    heroWaveCounter: 0,
     
     aiGold: 100,
     aiTechTier: 1,
@@ -166,43 +169,45 @@ function createHeroUnit(hero: Hero, lane: Lane): HeroUnit {
 }
 
 function updateHeroSpawning(state: GameState, deltaTime: number): GameState {
-  // Spawn player hero if not present and not on cooldown
-  if (!state.playerHeroUnit && state.playerHeroRespawnTime <= 0) {
-    state.playerHeroUnit = createHeroUnit(state.playerHero, 'top');
-    if (state.matchTime > 1) { // Don't play sound on initial spawn
-      soundSystem.heroRespawn();
-    }
-  }
-  
-  // Spawn AI hero if not present and not on cooldown
-  if (!state.aiHeroUnit && state.aiHeroRespawnTime <= 0) {
-    state.aiHeroUnit = createHeroUnit(state.aiHero, 'top');
-    if (state.matchTime > 1) { // Don't play sound on initial spawn
-      soundSystem.heroRespawn();
-    }
-  }
+  // Heroes don't spawn automatically - they spawn with waves
+  // This function only handles death detection and cleanup
   
   // Check if player hero died
   if (state.playerHeroUnit && state.playerHeroUnit.isDead) {
-    state.playerHeroRespawnTime = GAME_CONSTANTS.HERO_RESPAWN_TIME;
     state.playerHeroUnit = null;
   }
   
   // Check if AI hero died
   if (state.aiHeroUnit && state.aiHeroUnit.isDead) {
-    state.aiHeroRespawnTime = GAME_CONSTANTS.HERO_RESPAWN_TIME;
     state.aiHeroUnit = null;
   }
   
-  // Decrement respawn timers
-  if (state.playerHeroRespawnTime > 0) {
-    state.playerHeroRespawnTime -= deltaTime;
-  }
-  if (state.aiHeroRespawnTime > 0) {
-    state.aiHeroRespawnTime -= deltaTime;
+  return state;
+}
+
+// Spawn heroes with waves (called from updateFormationSpawning)
+function spawnHeroWithWave(state: GameState, lane: Lane): void {
+  // Spawn player hero if not present
+  if (!state.playerHeroUnit) {
+    state.playerHeroUnit = createHeroUnit(state.playerHero, lane);
+    if (state.matchTime > 1) {
+      soundSystem.heroRespawn();
+    }
+  } else {
+    // Update existing hero's lane
+    state.playerHeroUnit.lane = lane;
   }
   
-  return state;
+  // Spawn AI hero if not present
+  if (!state.aiHeroUnit) {
+    state.aiHeroUnit = createHeroUnit(state.aiHero, lane);
+    if (state.matchTime > 1) {
+      soundSystem.heroRespawn();
+    }
+  } else {
+    // Update existing hero's lane
+    state.aiHeroUnit.lane = lane;
+  }
 }
 
 // Add unit to formation (hire once, spawns automatically)
@@ -227,7 +232,6 @@ export function addToFormation(
   const formationSlot: FormationSlot = {
     unitType,
     lane,
-    spawnTimer: GAME_CONSTANTS.UNIT_SPAWN_INTERVAL, // First spawn after interval
     isActive: true,
   };
   
@@ -277,28 +281,53 @@ function spawnUnitFromFormation(
   soundSystem.unitSpawn();
 }
 
-// Update formation timers and spawn units
+// Update wave timers and spawn units in waves
 function updateFormationSpawning(state: GameState, deltaTime: number): GameState {
-  // Update player formation
-  for (const slot of state.playerFormation) {
-    if (!slot.isActive) continue;
-    
-    slot.spawnTimer -= deltaTime;
-    if (slot.spawnTimer <= 0) {
-      spawnUnitFromFormation(state, slot.unitType, 'human', slot.lane);
-      slot.spawnTimer = GAME_CONSTANTS.UNIT_SPAWN_INTERVAL;
+  // Update north lane wave timer
+  state.northLaneWaveTimer -= deltaTime;
+  if (state.northLaneWaveTimer <= 0) {
+    // Spawn heroes every other wave in north lane (even wave counter)
+    if (state.heroWaveCounter % 2 === 0) {
+      spawnHeroWithWave(state, 'top');
     }
+    
+    // Spawn all north lane units from both player and AI formations
+    for (const slot of state.playerFormation) {
+      if (slot.isActive && slot.lane === 'top') {
+        spawnUnitFromFormation(state, slot.unitType, 'human', 'top');
+      }
+    }
+    for (const slot of state.aiFormation) {
+      if (slot.isActive && slot.lane === 'top') {
+        spawnUnitFromFormation(state, slot.unitType, 'undead', 'top');
+      }
+    }
+    
+    state.northLaneWaveTimer = GAME_CONSTANTS.WAVE_SPAWN_INTERVAL;
+    state.heroWaveCounter++;
   }
   
-  // Update AI formation
-  for (const slot of state.aiFormation) {
-    if (!slot.isActive) continue;
-    
-    slot.spawnTimer -= deltaTime;
-    if (slot.spawnTimer <= 0) {
-      spawnUnitFromFormation(state, slot.unitType, 'undead', slot.lane);
-      slot.spawnTimer = GAME_CONSTANTS.UNIT_SPAWN_INTERVAL;
+  // Update south lane wave timer
+  state.southLaneWaveTimer -= deltaTime;
+  if (state.southLaneWaveTimer <= 0) {
+    // Spawn heroes every other wave in south lane (odd wave counter)
+    if (state.heroWaveCounter % 2 === 1) {
+      spawnHeroWithWave(state, 'bottom');
     }
+    
+    // Spawn all south lane units from both player and AI formations
+    for (const slot of state.playerFormation) {
+      if (slot.isActive && slot.lane === 'bottom') {
+        spawnUnitFromFormation(state, slot.unitType, 'human', 'bottom');
+      }
+    }
+    for (const slot of state.aiFormation) {
+      if (slot.isActive && slot.lane === 'bottom') {
+        spawnUnitFromFormation(state, slot.unitType, 'undead', 'bottom');
+      }
+    }
+    
+    state.southLaneWaveTimer = GAME_CONSTANTS.WAVE_SPAWN_INTERVAL;
   }
   
   return state;

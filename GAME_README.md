@@ -21,11 +21,11 @@ Destroy the enemy fortress while defending your own. Deploy units strategically 
 - **North Lane**: Q (Footman), W (Archer), E (Knight), R (Priest)
 - **South Lane**: A (Footman), S (Archer), D (Knight), F (Priest)
 
-**Mouse**: Click unit buttons to hire units for your formation (they will spawn automatically every 8 seconds)
+**Mouse**: Click unit buttons to hire units for your formation (they will spawn in waves)
 
 ### Core Mechanics
 
-**Formation-Based Deployment**: Hire units once to add them to your formation. Each hired unit automatically spawns every 8 seconds, creating a continuous production line. Build your formation strategically to create the perfect army composition.
+**Wave-Based Deployment**: Hire units once to add them to your formation. Units spawn in waves every 30 seconds. The North Lane wave spawns first, followed by the South Lane wave 15 seconds later. Build your formation strategically to create the perfect army composition for each wave.
 
 **Automatic Combat**: Units march forward automatically and engage enemies when in range. Focus on macro strategy rather than micromanagement.
 
@@ -37,7 +37,7 @@ Destroy the enemy fortress while defending your own. Deploy units strategically 
 - **Paladin** (Human): Divine Heal - restores health to nearby friendly units
 - **Death Knight** (Undead): Death Coil - deals massive damage to a target
 
-Heroes gain experience from kills, leveling up to become stronger. When a hero dies, they respawn after 30 seconds.
+Heroes gain experience from kills, leveling up to become stronger. Heroes spawn with unit waves, alternating between North and South lanes each cycle. When a hero dies, they respawn with the next appropriate wave.
 
 **Active Base Defense**: Your fortress isn't defenseless! The main base automatically attacks approaching enemy units within range, providing a last line of defense.
 
