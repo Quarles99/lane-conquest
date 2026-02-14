@@ -403,13 +403,27 @@ function moveUnits(state: GameState, deltaTime: number): GameState {
     ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
   ];
   
+  // Cache units by lane for faster lookups
+  const unitsByLane = {
+    top: allUnits.filter(u => u.lane === 'top' && !u.isDead),
+    bottom: allUnits.filter(u => u.lane === 'bottom' && !u.isDead),
+  };
+  
   for (const unit of allUnits) {
     if (unit.isDead) continue;
     
-    // Find enemies in same lane
-    const enemies = allUnits.filter(
-      u => u.faction !== unit.faction && u.lane === unit.lane && !u.isDead
-    );
+    // Get enemies in same lane (from cache)
+    const laneUnits = unitsByLane[unit.lane];
+    const enemies = laneUnits.filter(u => u.faction !== unit.faction);
+    
+    if (enemies.length === 0) {
+      // No enemies, move to enemy base
+      const direction = unit.faction === 'human' ? 1 : -1;
+      unit.position += direction * unit.moveSpeed * deltaTime;
+      unit.position = Math.max(0, Math.min(100, unit.position));
+      unit.target = null;
+      continue;
+    }
     
     // Find closest enemy
     let closestEnemy: Unit | null = null;
@@ -467,10 +481,16 @@ function resolveCombat(state: GameState, deltaTime: number): GameState {
     ...(state.aiHeroUnit ? [state.aiHeroUnit] : []),
   ];
   
+  // Create lookup map for faster target finding
+  const unitMap = new Map<string, Unit | HeroUnit>();
+  for (const unit of allUnits) {
+    unitMap.set(unit.id, unit);
+  }
+  
   for (const unit of allUnits) {
     if (unit.isDead || !unit.target) continue;
     
-    const target = allUnits.find(u => u.id === unit.target);
+    const target = unitMap.get(unit.target);
     if (!target || target.isDead) {
       unit.target = null;
       continue;

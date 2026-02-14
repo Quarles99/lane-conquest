@@ -4,17 +4,21 @@
 */
 
 import { AttackEffect, Projectile } from '@/lib/attackAnimations';
+import { memo } from 'react';
 
 interface AttackEffectsProps {
   projectiles: Projectile[];
   effects: AttackEffect[];
 }
 
-export default function AttackEffects({ projectiles, effects }: AttackEffectsProps) {
+function AttackEffects({ projectiles, effects }: AttackEffectsProps) {
+  // Limit rendered effects to prevent performance issues
+  const visibleProjectiles = projectiles.slice(0, 50);
+  const visibleEffects = effects.slice(0, 30);
   return (
     <div className="absolute inset-0 pointer-events-none">
       {/* Render projectiles */}
-      {projectiles.map(proj => {
+      {visibleProjectiles.map(proj => {
         const currentX = proj.fromX + (proj.toX - proj.fromX) * proj.progress;
         const currentY = proj.fromY + (proj.toY - proj.fromY) * proj.progress;
         
@@ -42,7 +46,7 @@ export default function AttackEffects({ projectiles, effects }: AttackEffectsPro
       })}
       
       {/* Render impact effects */}
-      {effects.map(effect => (
+      {visibleEffects.map(effect => (
         <div
           key={effect.id}
           className="absolute animate-ping"
@@ -63,3 +67,5 @@ export default function AttackEffects({ projectiles, effects }: AttackEffectsPro
     </div>
   );
 }
+
+export default memo(AttackEffects);

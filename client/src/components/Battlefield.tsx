@@ -8,12 +8,13 @@ import { GameState, Lane, Tower, Unit } from '@/lib/gameTypes';
 import type { HeroUnit } from '@/lib/gameTypes';
 import { getAnimationManager } from '@/lib/gameEngine';
 import AttackEffects from './AttackEffects';
+import { memo } from 'react';
 
 interface BattlefieldProps {
   gameState: GameState;
 }
 
-export default function Battlefield({ gameState }: BattlefieldProps) {
+function Battlefield({ gameState }: BattlefieldProps) {
   const animationManager = getAnimationManager();
   const projectiles = animationManager.getProjectiles();
   const effects = animationManager.getEffects();
@@ -210,3 +211,5 @@ function HeroMarker({ hero }: HeroMarkerProps) {
     </div>
   );
 }
+
+export default memo(Battlefield);

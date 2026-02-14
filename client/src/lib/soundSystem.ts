@@ -6,8 +6,10 @@
 
 class SoundSystem {
   private audioContext: AudioContext | null = null;
-  private masterVolume = 0.3;
+  private masterVolume = 0.15; // Reduced volume
   private enabled = true;
+  private lastSoundTime: Record<string, number> = {};
+  private soundThrottle = 50; // Minimum ms between same sounds
 
   private getContext(): AudioContext {
     if (!this.audioContext) {
@@ -16,8 +18,17 @@ class SoundSystem {
     return this.audioContext;
   }
 
-  private playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3) {
+  private canPlaySound(soundId: string): boolean {
+    const now = Date.now();
+    const lastTime = this.lastSoundTime[soundId] || 0;
+    if (now - lastTime < this.soundThrottle) return false;
+    this.lastSoundTime[soundId] = now;
+    return true;
+  }
+
+  private playTone(frequency: number, duration: number, type: OscillatorType = 'sine', volume: number = 0.3, soundId?: string) {
     if (!this.enabled) return;
+    if (soundId && !this.canPlaySound(soundId)) return;
     
     try {
       const ctx = this.getContext();
@@ -71,35 +82,35 @@ class SoundSystem {
 
   // Combat sounds
   arrowShot() {
+    if (!this.canPlaySound('arrow')) return;
     this.playTone(800, 0.1, 'sine', 0.15);
-    setTimeout(() => this.playTone(600, 0.05, 'sine', 0.1), 30);
   }
 
   swordHit() {
-    this.playNoise(0.08, 0.2);
-    this.playTone(150, 0.1, 'square', 0.15);
+    if (!this.canPlaySound('sword')) return;
+    this.playNoise(0.08, 0.15);
+    this.playTone(150, 0.1, 'square', 0.1);
   }
 
   magicCast() {
-    this.playTone(1200, 0.2, 'sine', 0.2);
-    setTimeout(() => this.playTone(1600, 0.15, 'sine', 0.15), 50);
-    setTimeout(() => this.playTone(2000, 0.1, 'sine', 0.1), 100);
+    if (!this.canPlaySound('magic')) return;
+    this.playTone(1200, 0.2, 'sine', 0.15);
   }
 
   unitDeath() {
-    this.playTone(200, 0.3, 'sawtooth', 0.2);
-    this.playNoise(0.15, 0.15);
+    if (!this.canPlaySound('death')) return;
+    this.playTone(200, 0.3, 'sawtooth', 0.15);
   }
 
   towerAttack() {
-    this.playTone(400, 0.15, 'triangle', 0.25);
-    this.playNoise(0.1, 0.15);
+    if (!this.canPlaySound('tower')) return;
+    this.playTone(400, 0.15, 'triangle', 0.15);
   }
 
   // UI sounds
   unitSpawn() {
-    this.playTone(600, 0.1, 'sine', 0.15);
-    setTimeout(() => this.playTone(800, 0.1, 'sine', 0.12), 50);
+    if (!this.canPlaySound('spawn')) return;
+    this.playTone(600, 0.1, 'sine', 0.1);
   }
 
   goldCollect() {

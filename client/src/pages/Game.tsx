@@ -20,6 +20,12 @@ export default function Game() {
   const [gameState, setGameState] = useState<GameState>(() => createInitialGameState());
   const lastUpdateRef = useRef<number>(Date.now());
   const animationFrameRef = useRef<number | undefined>(undefined);
+  const gameStateRef = useRef<GameState>(gameState);
+
+  // Keep ref in sync
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   // Game loop
   useEffect(() => {
@@ -29,10 +35,13 @@ export default function Game() {
 
     const gameLoop = () => {
       const now = Date.now();
-      const deltaTime = (now - lastUpdateRef.current) / 1000; // Convert to seconds
+      const deltaTime = Math.min((now - lastUpdateRef.current) / 1000, 0.1); // Cap delta time
       lastUpdateRef.current = now;
 
-      setGameState(prevState => updateGameState({ ...prevState }, deltaTime));
+      const newState = updateGameState(gameStateRef.current, deltaTime);
+      gameStateRef.current = newState;
+      setGameState(newState);
+      
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
 
