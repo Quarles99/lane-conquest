@@ -187,26 +187,20 @@ function updateHeroSpawning(state: GameState, deltaTime: number): GameState {
 
 // Spawn heroes with waves (called from updateFormationSpawning)
 function spawnHeroWithWave(state: GameState, lane: Lane): void {
-  // Spawn player hero if not present
+  // Spawn player hero if not present (only spawn, don't change lane if already exists)
   if (!state.playerHeroUnit) {
     state.playerHeroUnit = createHeroUnit(state.playerHero, lane);
     if (state.matchTime > 1) {
       soundSystem.heroRespawn();
     }
-  } else {
-    // Update existing hero's lane
-    state.playerHeroUnit.lane = lane;
   }
   
-  // Spawn AI hero if not present
+  // Spawn AI hero if not present (only spawn, don't change lane if already exists)
   if (!state.aiHeroUnit) {
     state.aiHeroUnit = createHeroUnit(state.aiHero, lane);
     if (state.matchTime > 1) {
       soundSystem.heroRespawn();
     }
-  } else {
-    // Update existing hero's lane
-    state.aiHeroUnit.lane = lane;
   }
 }
 
@@ -477,8 +471,9 @@ function moveUnits(state: GameState, deltaTime: number): GameState {
         unit.position = Math.max(0, Math.min(100, unit.position));
         unit.target = null;
       } else {
-        // In range, set target
+        // In range, stop moving and set target (no gap-closing)
         unit.target = closestEnemy.id;
+        // Don't move when in attack range
       }
     } else {
       // No enemies, move to enemy base
